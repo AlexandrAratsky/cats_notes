@@ -1,5 +1,8 @@
 import type { CatConfig } from "@/lib/cats-config"
-import type { FeedingGroupResult } from "@/lib/feeding-calculator"
+import type { FeedingGroupId, FeedingGroupResult } from "@/lib/feeding-calculator"
+import type { MeatTypeId } from "@/lib/meat-types"
+
+export type GroupMeatPreferences = Partial<Record<FeedingGroupId, MeatTypeId>>
 
 export type CalculationEntry = {
   type: "calculation"
@@ -10,6 +13,7 @@ export type CalculationEntry = {
   mealsPerDay: number
   gramsPerMeal: number
   groups?: FeedingGroupResult[]
+  groupMeats?: GroupMeatPreferences
 }
 
 export type FeedingEntry = {
@@ -29,6 +33,7 @@ export type CatStatus = {
 
 const JOURNAL_KEY_PREFIX = "cats-notes:journal:"
 const LAST_WEIGHT_KEY_PREFIX = "cats-notes:last-weight:"
+const GROUP_MEATS_KEY_PREFIX = "cats-notes:group-meats:"
 
 function journalKey(catId: string) {
   return `${JOURNAL_KEY_PREFIX}${catId}`
@@ -36,6 +41,10 @@ function journalKey(catId: string) {
 
 function lastWeightKey(catId: string) {
   return `${LAST_WEIGHT_KEY_PREFIX}${catId}`
+}
+
+function groupMeatsKey(catId: string) {
+  return `${GROUP_MEATS_KEY_PREFIX}${catId}`
 }
 
 function createEntryId() {
@@ -68,6 +77,37 @@ export function setLastWeight(catId: string, weightKg: number) {
   }
 
   window.localStorage.setItem(lastWeightKey(catId), String(weightKg))
+}
+
+export function getGroupMeatPreferences(catId: string): GroupMeatPreferences {
+  if (!isBrowser()) {
+    return {}
+  }
+
+  const raw = window.localStorage.getItem(groupMeatsKey(catId))
+
+  if (!raw) {
+    return {}
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as GroupMeatPreferences
+
+    return parsed && typeof parsed === "object" ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+export function setGroupMeatPreferences(
+  catId: string,
+  preferences: GroupMeatPreferences
+) {
+  if (!isBrowser()) {
+    return
+  }
+
+  window.localStorage.setItem(groupMeatsKey(catId), JSON.stringify(preferences))
 }
 
 export function getEffectiveWeight(cat: CatConfig): number {

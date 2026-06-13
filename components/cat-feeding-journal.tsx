@@ -9,6 +9,7 @@ import {
   getJournalEntries,
   type JournalEntry,
 } from "@/lib/feeding-journal-storage"
+import { getMeatTypeLabel } from "@/lib/meat-types"
 
 type CatFeedingJournalProps = {
   catId: string
@@ -28,7 +29,13 @@ function formatEntry(entry: JournalEntry): string {
     }
 
     const groups = entry.groups
-      .map((group) => `${group.label}: ~${group.dailyGrams} г/день`)
+      .map((group) => {
+        const meatLabel = entry.groupMeats?.[group.id]
+          ? ` (${getMeatTypeLabel(entry.groupMeats[group.id]!)})`
+          : ""
+
+        return `${group.label}${meatLabel}: ~${group.dailyGrams} г/день`
+      })
       .join("; ")
 
     return `${summary}. ${groups}`
