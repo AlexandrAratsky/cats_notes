@@ -21,7 +21,17 @@ function formatEntry(entry: JournalEntry): string {
       return `Вес ${entry.weightKg} кг — формула не задана`
     }
 
-    return `Вес ${entry.weightKg} кг — ~${entry.dailyGrams} г/день (${entry.mealsPerDay} приёма по ~${entry.gramsPerMeal} г)`
+    const summary = `Вес ${entry.weightKg} кг — ~${entry.dailyGrams} г/день (${entry.mealsPerDay} приёма по ~${entry.gramsPerMeal} г)`
+
+    if (!entry.groups?.length) {
+      return summary
+    }
+
+    const groups = entry.groups
+      .map((group) => `${group.label}: ~${group.dailyGrams} г/день`)
+      .join("; ")
+
+    return `${summary}. ${groups}`
   }
 
   return entry.note

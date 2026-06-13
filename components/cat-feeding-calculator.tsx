@@ -58,12 +58,56 @@ function validateWeight(value: string): string | null {
   return null
 }
 
-function formatResult(result: FeedingResult): string {
-  if (result.note) {
-    return result.note
-  }
+function FeedingResultDisplay({ result }: { result: FeedingResult }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm">
+        Суточная норма:{" "}
+        <span className="font-medium">~{result.dailyGrams} г</span> (2% от веса)
+        <br />
+        Утром и вечером:{" "}
+        <span className="font-medium">
+          ~{result.gramsPerMeal} г за приём
+        </span>
+      </p>
 
-  return `~${result.dailyGrams} г в день (${result.mealsPerDay} приёма по ~${result.gramsPerMeal} г)`
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-muted/50 text-left">
+              <th className="px-3 py-2 font-medium">Группа</th>
+              <th className="px-3 py-2 font-medium text-right">Доля</th>
+              <th className="px-3 py-2 font-medium text-right">В день</th>
+              <th className="px-3 py-2 font-medium text-right">
+                За приём
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.groups.map((group) => (
+              <tr key={group.id} className="border-b last:border-b-0">
+                <td className="px-3 py-2">
+                  <span className="font-medium">{group.label}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {group.examples}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums">
+                  {group.percentage}%
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums">
+                  ~{group.dailyGrams} г
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums">
+                  ~{group.gramsPerMeal} г
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 }
 
 type CatFeedingCalculatorProps = {
@@ -107,6 +151,7 @@ export function CatFeedingCalculator({
       dailyGrams: feedingResult.dailyGrams,
       mealsPerDay: feedingResult.mealsPerDay,
       gramsPerMeal: feedingResult.gramsPerMeal,
+      groups: feedingResult.groups,
     })
 
     onCalculationSaved?.()
@@ -117,7 +162,8 @@ export function CatFeedingCalculator({
       <CardHeader>
         <CardTitle>Калькулятор кормления</CardTitle>
         <CardDescription>
-          Введите вес кошки, чтобы узнать суточную норму корма.
+          Суточная норма — 2% от веса натуралки, разделённой на четыре группы.
+          Кормление утром и вечером.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -152,7 +198,9 @@ export function CatFeedingCalculator({
         {result ? (
           <Alert>
             <AlertTitle>Результат</AlertTitle>
-            <AlertDescription>{formatResult(result)}</AlertDescription>
+            <AlertDescription>
+              <FeedingResultDisplay result={result} />
+            </AlertDescription>
           </Alert>
         ) : null}
       </CardContent>

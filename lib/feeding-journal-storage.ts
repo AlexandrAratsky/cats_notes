@@ -1,4 +1,5 @@
 import type { CatConfig } from "@/lib/cats-config"
+import type { FeedingGroupResult } from "@/lib/feeding-calculator"
 
 export type CalculationEntry = {
   type: "calculation"
@@ -8,6 +9,7 @@ export type CalculationEntry = {
   dailyGrams: number
   mealsPerDay: number
   gramsPerMeal: number
+  groups?: FeedingGroupResult[]
 }
 
 export type FeedingEntry = {
