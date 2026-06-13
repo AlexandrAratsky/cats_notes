@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card"
 import type { CatConfig } from "@/lib/cats-config"
 import { formatDateTime } from "@/lib/format-date"
-import { getCatStatus } from "@/lib/feeding-journal-storage"
+import { getFeedingEntries } from "@/lib/feeding-journal-storage-v2"
 
 type CatsOverviewProps = {
   cats: CatConfig[]
@@ -24,15 +24,17 @@ type CatCardStatus = {
 }
 
 function buildStatus(catId: string): CatCardStatus {
-  const status = getCatStatus(catId)
+  const entries = getFeedingEntries(catId)
+  const lastEntry = entries[0]
+  const totalEaten = entries
+    .filter((e) => e.date === new Date().toISOString().split("T")[0])
+    .reduce((sum, e) => sum + e.totalGrams, 0)
 
   return {
-    lastFeedingText: status.lastFeeding
-      ? formatDateTime(status.lastFeeding.createdAt)
+    lastFeedingText: lastEntry
+      ? formatDateTime(lastEntry.createdAt)
       : "Нет данных",
-    lastNormText: status.lastCalculation
-      ? `~${status.lastCalculation.dailyGrams} г/день`
-      : "Нет данных",
+    lastNormText: totalEaten > 0 ? `Сегодня: ~${totalEaten} г` : "Нет данных",
   }
 }
 
@@ -43,9 +45,7 @@ export function CatsOverview({ cats }: CatsOverviewProps) {
 
   useEffect(() => {
     setStatusByCatId(
-      Object.fromEntries(
-        cats.map((cat) => [cat.id, buildStatus(cat.id)])
-      )
+      Object.fromEntries(cats.map((cat) => [cat.id, buildStatus(cat.id)]))
     )
   }, [cats])
 

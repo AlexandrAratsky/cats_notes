@@ -1,37 +1,40 @@
-export const DAILY_WEIGHT_PERCENT = 0.02
+import { getSettings } from "@/lib/settings-storage"
+
 export const MEALS_PER_DAY = 2
 
 export const FEEDING_GROUPS = [
   {
     id: "meat",
-    label: "Мясо / мясная обрезь",
-    examples: "говядина, индейка, курица",
-    percentage: 40,
+    label: "Мясо",
+    examples: "говядина, индейка, курица, филе",
+    key: "meat" as const,
   },
   {
     id: "muscular-organs",
     label: "Мышечные органы",
     examples: "сердце, желудки, лёгкие, рубец",
-    percentage: 30,
+    key: "muscularOrgans" as const,
   },
   {
     id: "meat-on-bone",
     label: "Мясокостная",
     examples: "шеи, головы, каркасы птицы, хвосты",
-    percentage: 20,
+    key: "meatOnBone" as const,
   },
   {
     id: "hematopoietic-organs",
     label: "Кроветворные органы",
     examples: "печень, почки, селезёнка",
-    percentage: 10,
+    key: "hematopoieticOrgans" as const,
   },
 ] as const
 
 export type FeedingGroupId = (typeof FEEDING_GROUPS)[number]["id"]
+export type FeedingGroupKey = (typeof FEEDING_GROUPS)[number]["key"]
 
 export type FeedingGroupResult = {
   id: FeedingGroupId
+  key: FeedingGroupKey
   label: string
   examples: string
   percentage: number
@@ -44,24 +47,44 @@ export type FeedingResult = {
   mealsPerDay: number
   gramsPerMeal: number
   groups: FeedingGroupResult[]
+  dailyPercent: number
 }
 
 function roundGrams(value: number): number {
   return Math.round(value)
 }
 
-export function calculateFeeding(weightKg: number): FeedingResult {
-  const dailyGrams = roundGrams(weightKg * 1000 * DAILY_WEIGHT_PERCENT)
+/**
+ * Рассчитать суточный рацион с учётом настроек
+ * @param weightKg Вес животного в кг
+ * @param customSettings Опциональные настройки (если не переданы — берутся из хранилища)
+ */
+export function calculateFeeding(
+  weightKg: number,
+  customSettings?: {
+    dailyPercent: number
+    groupRatios: Record<FeedingGroupKey, number>
+  }
+): FeedingResult {
+  const settings = customSettings ?? {
+    dailyPercent: getSettings().dailyPercent,
+    groupRatios: getSettings().groupRatios,
+  }
+
+  const dailyPercent = settings.dailyPercent / 100
+  const dailyGrams = roundGrams(weightKg * 1000 * dailyPercent)
   const gramsPerMeal = roundGrams(dailyGrams / MEALS_PER_DAY)
 
   const groups: FeedingGroupResult[] = FEEDING_GROUPS.map((group) => {
-    const groupDailyGrams = roundGrams((dailyGrams * group.percentage) / 100)
+    const groupPercentage = settings.groupRatios[group.key]
+    const groupDailyGrams = roundGrams((dailyGrams * groupPercentage) / 100)
 
     return {
       id: group.id,
+      key: group.key,
       label: group.label,
       examples: group.examples,
-      percentage: group.percentage,
+      percentage: groupPercentage,
       dailyGrams: groupDailyGrams,
       gramsPerMeal: roundGrams(groupDailyGrams / MEALS_PER_DAY),
     }
@@ -72,5 +95,22 @@ export function calculateFeeding(weightKg: number): FeedingResult {
     mealsPerDay: MEALS_PER_DAY,
     gramsPerMeal,
     groups,
+    dailyPercent: settings.dailyPercent,
   }
+}
+
+/**
+ * Получить метку группы по ID
+ */
+export function getGroupLabel(groupId: FeedingGroupId): string {
+  const group = FEEDING_GROUPS.find((g) => g.id === groupId)
+  return group?.label ?? groupId
+}
+
+/**
+ * Получить key группы по ID
+ */
+export function getGroupKey(groupId: FeedingGroupId): FeedingGroupKey {
+  const group = FEEDING_GROUPS.find((g) => g.id === groupId)
+  return group?.key ?? "meat"
 }
