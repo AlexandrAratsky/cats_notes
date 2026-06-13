@@ -1,18 +1,16 @@
-import { Button } from "@/components/ui/button"
+import { CatFeedingCalculator } from "@/components/cat-feeding-calculator"
 
 export default function Page() {
   return (
     <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
+      <div className="flex w-full max-w-md min-w-0 flex-col gap-4">
         <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
+          <h1 className="font-medium">Норма корма для кошки</h1>
+          <p className="text-sm text-muted-foreground">
+            Рассчитайте, сколько корма нужно вашему питомцу в день.
+          </p>
         </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
+        <CatFeedingCalculator />
       </div>
     </div>
   )
