@@ -1,0 +1,9 @@
+{
+  "cats": [
+    { "id": "murka", "name": "Мурка", "weightKg": 4.2 },
+    { "id": "barsik", "name": "Барсик", "weightKg": 5.1 },
+    { "id": "pushok", "name": "Пушок", "weightKg": 3.8 },
+    { "id": "simba", "name": "Симба", "weightKg": 4.6 },
+    { "id": "luna", "name": "Луна", "weightKg": 3.5 }
+  ]
+}

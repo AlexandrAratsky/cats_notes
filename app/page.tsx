@@ -1,17 +1,42 @@
-import { CatFeedingCalculator } from "@/components/cat-feeding-calculator"
+import { Suspense } from "react"
 
-export default function Page() {
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CatDetailPage } from "@/components/cat-detail-page"
+import { CatsOverview } from "@/components/cats-overview"
+import { getCatById, getCats } from "@/lib/cats-config"
+
+type PageProps = {
+  searchParams: Promise<{ cat?: string }>
+}
+
+export default async function Page({ searchParams }: PageProps) {
+  const { cat: catId } = await searchParams
+  const cats = getCats()
+
+  if (!catId) {
+    return (
+      <Suspense fallback={null}>
+        <CatsOverview cats={cats} />
+      </Suspense>
+    )
+  }
+
+  const cat = getCatById(catId)
+
+  if (!cat) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Кошка не найдена</AlertTitle>
+        <AlertDescription>
+          Проверьте адрес или выберите кошку в меню слева.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex w-full max-w-md min-w-0 flex-col gap-4">
-        <div>
-          <h1 className="font-medium">Норма корма для кошки</h1>
-          <p className="text-sm text-muted-foreground">
-            Рассчитайте, сколько корма нужно вашему питомцу в день.
-          </p>
-        </div>
-        <CatFeedingCalculator />
-      </div>
-    </div>
+    <Suspense fallback={null}>
+      <CatDetailPage cat={cat} />
+    </Suspense>
   )
 }

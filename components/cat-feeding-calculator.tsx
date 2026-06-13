@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,10 @@ import {
   calculateFeeding,
   type FeedingResult,
 } from "@/lib/feeding-calculator"
+import {
+  addCalculationEntry,
+  getLastWeight,
+} from "@/lib/feeding-journal-storage"
 
 const MIN_WEIGHT_KG = 0.5
 const MAX_WEIGHT_KG = 15
@@ -62,10 +66,26 @@ function formatResult(result: FeedingResult): string {
   return `~${result.dailyGrams} г в день (${result.mealsPerDay} приёма по ~${result.gramsPerMeal} г)`
 }
 
-export function CatFeedingCalculator() {
+type CatFeedingCalculatorProps = {
+  catId: string
+  initialWeightKg: number
+  onCalculationSaved?: () => void
+}
+
+export function CatFeedingCalculator({
+  catId,
+  initialWeightKg,
+  onCalculationSaved,
+}: CatFeedingCalculatorProps) {
   const [weight, setWeight] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<FeedingResult | null>(null)
+
+  useEffect(() => {
+    const savedWeight = getLastWeight(catId)
+    const effectiveWeight = savedWeight ?? initialWeightKg
+    setWeight(String(effectiveWeight))
+  }, [catId, initialWeightKg])
 
   function handleCalculate() {
     const validationError = validateWeight(weight)
@@ -77,8 +97,19 @@ export function CatFeedingCalculator() {
     }
 
     const weightKg = Number(weight.replace(",", "."))
+    const feedingResult = calculateFeeding(weightKg)
+
     setError(null)
-    setResult(calculateFeeding(weightKg))
+    setResult(feedingResult)
+
+    addCalculationEntry(catId, {
+      weightKg,
+      dailyGrams: feedingResult.dailyGrams,
+      mealsPerDay: feedingResult.mealsPerDay,
+      gramsPerMeal: feedingResult.gramsPerMeal,
+    })
+
+    onCalculationSaved?.()
   }
 
   return (
@@ -92,10 +123,10 @@ export function CatFeedingCalculator() {
       <CardContent className="flex flex-col gap-4">
         <FieldGroup>
           <Field data-invalid={error ? true : undefined}>
-            <FieldLabel htmlFor="cat-weight">Вес кошки</FieldLabel>
+            <FieldLabel htmlFor={`cat-weight-${catId}`}>Вес кошки</FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="cat-weight"
+                id={`cat-weight-${catId}`}
                 type="number"
                 inputMode="decimal"
                 min={MIN_WEIGHT_KG}
