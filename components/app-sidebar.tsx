@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/sidebar"
 import type { CatConfig } from "@/lib/cats-config"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { CatIcon, Home01Icon } from "@hugeicons/core-free-icons"
+import {
+  Calculator01Icon,
+  CatIcon,
+  Home01Icon,
+} from "@hugeicons/core-free-icons"
 
 type AppSidebarProps = {
   cats: CatConfig[]
@@ -46,6 +50,18 @@ export function AppSidebar({ cats }: AppSidebarProps) {
                 >
                   <HugeiconsIcon icon={Home01Icon} data-icon="inline-start" />
                   Все кошки
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={<Link href="/?view=calculator" />}
+                  isActive={searchParams.get("view") === "calculator"}
+                >
+                  <HugeiconsIcon
+                    icon={Calculator01Icon}
+                    data-icon="inline-start"
+                  />
+                  Калькулятор кормления
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
