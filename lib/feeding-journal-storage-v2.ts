@@ -6,8 +6,8 @@
  */
 
 import type { CatConfig } from "@/lib/cats-config"
-import type { FeedingGroupKey } from "@/lib/feeding-calculator"
-import type { Product, ProductComposition } from "@/lib/products"
+
+import type { Product } from "@/lib/products"
 import { calculateProductDistribution } from "@/lib/products"
 
 // === Типы ===
@@ -54,7 +54,7 @@ export type DailyFeedingSummary = {
 // === Константы ===
 
 const JOURNAL_KEY_PREFIX = "cats-notes:journal:v2:"
-const DAILY_BALANCE_PREFIX = "cats-notes:daily-balance:"
+
 const LAST_WEIGHT_KEY_PREFIX = "cats-notes:last-weight:"
 
 // === Утилиты ===
@@ -69,10 +69,6 @@ function createEntryId() {
 
 function getJournalKey(catId: string) {
   return `${JOURNAL_KEY_PREFIX}${catId}`
-}
-
-function getBalanceKey(catId: string, date: string) {
-  return `${DAILY_BALANCE_PREFIX}${catId}:${date}`
 }
 
 function getLastWeightKey(catId: string) {
@@ -182,20 +178,27 @@ export function deleteFeedingEntry(catId: string, entryId: string): boolean {
 /**
  * Получить записи за конкретный день
  */
-export function getEntriesForDate(catId: string, date: string): FeedingEntryV2[] {
+export function getEntriesForDate(
+  catId: string,
+  date: string
+): FeedingEntryV2[] {
   return getEntriesFromStorage(catId).filter((e) => e.date === date)
 }
 
 /**
  * Получить сводку по дню
  */
-export function getDailySummary(catId: string, date: string): DailyFeedingSummary {
+export function getDailySummary(
+  catId: string,
+  date: string
+): DailyFeedingSummary {
   const entries = getEntriesForDate(catId, date)
 
   const totals: GroupDistribution = entries.reduce(
     (acc, entry) => ({
       meat: acc.meat + entry.groupDistribution.meat,
-      muscularOrgans: acc.muscularOrgans + entry.groupDistribution.muscularOrgans,
+      muscularOrgans:
+        acc.muscularOrgans + entry.groupDistribution.muscularOrgans,
       meatOnBone: acc.meatOnBone + entry.groupDistribution.meatOnBone,
       hematopoieticOrgans:
         acc.hematopoieticOrgans + entry.groupDistribution.hematopoieticOrgans,
@@ -209,9 +212,11 @@ export function getDailySummary(catId: string, date: string): DailyFeedingSummar
 /**
  * Получить несгруппированные записи (все) с разбивкой по дням
  */
-export function getAllEntriesGroupedByDate(
-  catId: string
-): Array<{ date: string; entries: FeedingEntryV2[]; totals: GroupDistribution }> {
+export function getAllEntriesGroupedByDate(catId: string): Array<{
+  date: string
+  entries: FeedingEntryV2[]
+  totals: GroupDistribution
+}> {
   const entries = getEntriesFromStorage(catId)
   const groups = new Map<string, FeedingEntryV2[]>()
 
@@ -223,14 +228,17 @@ export function getAllEntriesGroupedByDate(
   }
 
   // Сортируем даты по убыванию (новые сначала)
-  const sortedDates = Array.from(groups.keys()).sort((a, b) => b.localeCompare(a))
+  const sortedDates = Array.from(groups.keys()).sort((a, b) =>
+    b.localeCompare(a)
+  )
 
   return sortedDates.map((date) => {
     const dayEntries = groups.get(date)!
     const totals = dayEntries.reduce(
       (acc, entry) => ({
         meat: acc.meat + entry.groupDistribution.meat,
-        muscularOrgans: acc.muscularOrgans + entry.groupDistribution.muscularOrgans,
+        muscularOrgans:
+          acc.muscularOrgans + entry.groupDistribution.muscularOrgans,
         meatOnBone: acc.meatOnBone + entry.groupDistribution.meatOnBone,
         hematopoieticOrgans:
           acc.hematopoieticOrgans + entry.groupDistribution.hematopoieticOrgans,
@@ -351,7 +359,10 @@ export function calculateFeedingPreview(
     targetGrams,
     groupDistribution,
     remainingAfter: {
-      meat: Math.max(0, targetGrams.meat - currentConsumed.meat - groupDistribution.meat),
+      meat: Math.max(
+        0,
+        targetGrams.meat - currentConsumed.meat - groupDistribution.meat
+      ),
       muscularOrgans: Math.max(
         0,
         targetGrams.muscularOrgans -
@@ -360,7 +371,9 @@ export function calculateFeedingPreview(
       ),
       meatOnBone: Math.max(
         0,
-        targetGrams.meatOnBone - currentConsumed.meatOnBone - groupDistribution.meatOnBone
+        targetGrams.meatOnBone -
+          currentConsumed.meatOnBone -
+          groupDistribution.meatOnBone
       ),
       hematopoieticOrgans: Math.max(
         0,

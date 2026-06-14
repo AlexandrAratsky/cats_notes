@@ -1,10 +1,10 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
+
 import {
   Table,
   TableBody,
@@ -15,9 +15,7 @@ import {
 } from "@/components/ui/table"
 import {
   deleteFeedingEntry,
-  formatDate,
   getAllEntriesGroupedByDate,
-  getDailySummary,
   getTodayDate,
   type GroupDistribution,
 } from "@/lib/feeding-journal-storage-v2"
@@ -64,24 +62,32 @@ export function FeedingJournalV2({ cat, refreshKey }: FeedingJournalV2Props) {
       entries: FeedingEntryV2[]
       totals: GroupDistribution
     }>
-  >([])
-  const [feedingResult, setFeedingResult] = useState<FeedingResult | null>(null)
+  >(() => getAllEntriesGroupedByDate(cat.id))
 
-  const loadEntries = useCallback(() => {
-    setEntries(getAllEntriesGroupedByDate(cat.id))
+  const [feedingResult, setFeedingResult] = useState<FeedingResult | null>(
+    () => {
+      const weight = getEffectiveWeight(cat)
+      return calculateFeeding(weight)
+    }
+  )
 
-    // Рассчитываем целевые значения для сегодня
-    const weight = getEffectiveWeight(cat)
-    setFeedingResult(calculateFeeding(weight))
-  }, [cat])
-
+  // Обновляем данные при изменении refreshKey
   useEffect(() => {
-    loadEntries()
-  }, [loadEntries, refreshKey])
+    const timer = requestAnimationFrame(() => {
+      setEntries(getAllEntriesGroupedByDate(cat.id))
+
+      const weight = getEffectiveWeight(cat)
+      setFeedingResult(calculateFeeding(weight))
+    })
+    return () => cancelAnimationFrame(timer)
+  }, [cat, refreshKey])
 
   function handleDelete(entryId: string) {
     if (deleteFeedingEntry(cat.id, entryId)) {
-      loadEntries()
+      setEntries(getAllEntriesGroupedByDate(cat.id))
+
+      const weight = getEffectiveWeight(cat)
+      setFeedingResult(calculateFeeding(weight))
     }
   }
 
@@ -196,7 +202,7 @@ function DaySection({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40px]"></TableHead>
+                <TableHead className="w-10"></TableHead>
                 <TableHead>Продукт</TableHead>
                 <TableHead className="text-right">Всего</TableHead>
                 {GROUP_KEYS.map((key) => (
@@ -204,7 +210,7 @@ function DaySection({
                     {GROUP_LABELS[key]}
                   </TableHead>
                 ))}
-                <TableHead className="w-[60px]"></TableHead>
+                <TableHead className="w-15"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -257,8 +263,8 @@ function DaySection({
                         <DialogHeader>
                           <DialogTitle>Удалить запись?</DialogTitle>
                           <DialogDescription>
-                            Запись "{entry.productName}" ({entry.totalGrams} г)
-                            будет удалена безвозвратно.
+                            Запись &ldquo;{entry.productName}&rdquo; (
+                            {entry.totalGrams} г) будет удалена безвозвратно.
                           </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>

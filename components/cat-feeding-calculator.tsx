@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -108,23 +108,23 @@ function FeedingResultDisplay({ result }: FeedingResultDisplayProps) {
 type CatFeedingCalculatorProps = {
   catId: string
   initialWeightKg: number
-  onCalculationSaved?: () => void
+  onCalculationSavedAction?: () => void
 }
 
 export function CatFeedingCalculator({
   catId,
   initialWeightKg,
-  onCalculationSaved,
+  onCalculationSavedAction,
 }: CatFeedingCalculatorProps) {
-  const [weight, setWeight] = useState("")
+  const [weight, setWeight] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedWeight = getLastWeight(catId)
+      return String(savedWeight ?? initialWeightKg)
+    }
+    return String(initialWeightKg)
+  })
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<FeedingResult | null>(null)
-
-  useEffect(() => {
-    const savedWeight = getLastWeight(catId)
-    const effectiveWeight = savedWeight ?? initialWeightKg
-    setWeight(String(effectiveWeight))
-  }, [catId, initialWeightKg])
 
   function handleCalculate() {
     const validationError = validateWeight(weight)
@@ -142,7 +142,7 @@ export function CatFeedingCalculator({
     setResult(feedingResult)
     setLastWeight(catId, weightKg)
 
-    onCalculationSaved?.()
+    onCalculationSavedAction?.()
   }
 
   return (

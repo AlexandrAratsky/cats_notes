@@ -3,9 +3,24 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import { FeedingPreviewCard } from "@/components/feeding-preview"
 import { ProductSelector } from "@/components/product-selector"
 import {
@@ -20,11 +35,10 @@ import { calculateFeeding, type FeedingResult } from "@/lib/feeding-calculator"
 import { getEffectiveWeight } from "@/lib/feeding-journal-storage-v2"
 import type { CatConfig } from "@/lib/cats-config"
 import type { Product } from "@/lib/products"
-import { cn } from "@/lib/utils"
 
 type FeedingFormProps = {
   cat: CatConfig
-  onSaved: () => void
+  onSavedAction: () => void
 }
 
 const MIN_GRAMS = 1
@@ -52,7 +66,7 @@ function validateGrams(value: string): string | null {
   return null
 }
 
-export function FeedingForm({ cat, onSaved }: FeedingFormProps) {
+export function FeedingForm({ cat, onSavedAction }: FeedingFormProps) {
   // === State ===
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [grams, setGrams] = useState("")
@@ -112,7 +126,7 @@ export function FeedingForm({ cat, onSaved }: FeedingFormProps) {
     setNote("")
     setError(null)
     setShowPreview(false)
-    onSaved()
+    onSavedAction()
   }
 
   function handleCancel() {
@@ -186,7 +200,10 @@ export function FeedingForm({ cat, onSaved }: FeedingFormProps) {
 
       {!showPreview && (
         <CardFooter className="justify-end">
-          <Button onClick={handleCalculate} disabled={!selectedProduct || !grams}>
+          <Button
+            onClick={handleCalculate}
+            disabled={!selectedProduct || !grams}
+          >
             Рассчитать и добавить
           </Button>
         </CardFooter>
@@ -202,8 +219,10 @@ function targetGramsFromResult(result: FeedingResult): GroupDistribution {
     meat: result.groups.find((g) => g.key === "meat")?.dailyGrams ?? 0,
     muscularOrgans:
       result.groups.find((g) => g.key === "muscularOrgans")?.dailyGrams ?? 0,
-    meatOnBone: result.groups.find((g) => g.key === "meatOnBone")?.dailyGrams ?? 0,
+    meatOnBone:
+      result.groups.find((g) => g.key === "meatOnBone")?.dailyGrams ?? 0,
     hematopoieticOrgans:
-      result.groups.find((g) => g.key === "hematopoieticOrgans")?.dailyGrams ?? 0,
+      result.groups.find((g) => g.key === "hematopoieticOrgans")?.dailyGrams ??
+      0,
   }
 }
